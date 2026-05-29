@@ -48,10 +48,17 @@ export function SearchResultCard({
 
   return (
     <button
-      onClick={onClick}
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('[SearchResultCard] clicked:', place.name);
+        onClick?.();
+      }}
       className={cn(
         "w-full rounded-2xl border border-border bg-card p-4 text-left",
-        "transition-colors hover:border-accent cursor-pointer"
+        "transition-colors hover:border-accent touch-manipulation select-none",
+        "active:scale-[0.98]"
       )}
     >
       <div className="flex items-start justify-between gap-2 mb-2">

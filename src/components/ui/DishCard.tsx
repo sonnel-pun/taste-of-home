@@ -12,10 +12,17 @@ interface DishCardProps {
 export function DishCard({ emoji, nameEn, nameNative, onClick }: DishCardProps) {
   return (
     <button
-      onClick={onClick}
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('[DishCard] clicked:', nameEn);
+        onClick?.();
+      }}
       className={cn(
         "flex flex-col items-start gap-1 rounded-2xl border border-border bg-card p-4",
-        "transition-all hover:-translate-y-0.5 hover:border-accent cursor-pointer text-left"
+        "transition-all hover:-translate-y-0.5 hover:border-accent touch-manipulation select-none",
+        "text-left active:scale-95"
       )}
     >
       <span className="text-3xl">{emoji}</span>

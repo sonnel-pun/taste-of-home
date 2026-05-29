@@ -60,7 +60,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="mx-auto max-w-md px-5 py-6">
+    <div className="mx-auto max-w-md px-5 py-6 relative min-h-screen">
       {/* Header */}
       <header className="mb-6">
         <div className="flex items-center justify-between">
@@ -69,7 +69,7 @@ export default function HomePage() {
             <span className="text-accent">of</span>
             Home
           </h1>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-sm">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-sm select-none">
             👋
           </div>
         </div>
@@ -78,7 +78,7 @@ export default function HomePage() {
       {/* Search */}
       <form onSubmit={handleSubmit} className="mb-5">
         <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3.5">
-          <span className="text-muted">🔍</span>
+          <span className="text-muted select-none">🔍</span>
           <input
             type="text"
             placeholder="Craving something specific?"
@@ -91,7 +91,7 @@ export default function HomePage() {
 
       {/* Moods */}
       <div className="mb-6">
-        <div className="mb-2.5 text-xs font-medium uppercase tracking-wider text-muted">
+        <div className="mb-2.5 text-xs font-medium uppercase tracking-wider text-muted select-none">
           How are you feeling?
         </div>
         <div className="flex flex-wrap gap-2">
@@ -110,19 +110,19 @@ export default function HomePage() {
       {/* Content Area */}
       {hasSearched ? (
         <div>
-          {/* Search Results */}
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold">
               {loading ? "Searching..." : `${results.length} results`}
             </h2>
             {hasSearched && (
               <button
+                type="button"
                 onClick={() => {
                   setSearchInput("");
                   setActiveMood(undefined);
                   search({});
                 }}
-                className="text-xs text-accent"
+                className="text-xs text-accent touch-manipulation select-none"
               >
                 Clear
               </button>
@@ -131,21 +131,21 @@ export default function HomePage() {
 
           {loading && (
             <div className="py-12 text-center text-muted">
-              <div className="mb-2 text-2xl">🍜</div>
+              <div className="mb-2 text-2xl select-none">🍜</div>
               Finding your taste of home...
             </div>
           )}
 
           {error && (
             <div className="rounded-2xl border border-border bg-card p-6 text-center">
-              <div className="mb-2 text-2xl">😕</div>
+              <div className="mb-2 text-2xl select-none">😕</div>
               <div className="text-sm text-muted">{error}</div>
             </div>
           )}
 
           {!loading && !error && results.length === 0 && (
             <div className="rounded-2xl border border-border bg-card p-6 text-center">
-              <div className="mb-2 text-2xl">🔍</div>
+              <div className="mb-2 text-2xl select-none">🔍</div>
               <div className="text-sm font-medium">No results yet</div>
               <div className="mt-1 text-xs text-muted">
                 Try searching for a dish, or pick a mood to explore
@@ -177,7 +177,6 @@ export default function HomePage() {
         </div>
       ) : (
         <>
-          {/* Popular Dishes Grid */}
           <div className="mb-6">
             <h2 className="mb-3 text-base font-semibold">Popular among HK immigrants</h2>
             <div className="grid grid-cols-2 gap-3">
@@ -193,7 +192,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Empty State / Onboarding */}
           <div className="rounded-2xl border border-border bg-card p-5">
             <div className="mb-3 text-sm font-medium">✨ New to London?</div>
             <p className="text-sm text-muted leading-relaxed">
@@ -204,8 +202,7 @@ export default function HomePage() {
         </>
       )}
 
-      {/* Footer */}
-      <footer className="mt-8 pb-6 text-center text-xs text-muted">
+      <footer className="mt-8 pb-6 text-center text-xs text-muted select-none">
         Taste of Home · Built with 💛 for immigrants everywhere
       </footer>
     </div>
