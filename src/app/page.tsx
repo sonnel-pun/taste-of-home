@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { MoodChip } from "@/components/ui/MoodChip";
 import { DishCard } from "@/components/ui/DishCard";
 import { SearchResultCard } from "@/components/ui/SearchResultCard";
@@ -29,9 +29,16 @@ export default function HomePage() {
   const { results, loading, error, hasSearched, search } = useSearch();
   const [searchInput, setSearchInput] = useState("");
   const [activeMood, setActiveMood] = useState<string | undefined>(undefined);
+  const [debugMsg, setDebugMsg] = useState("");
+
+  useEffect(() => {
+    console.log("[HomePage] mounted");
+    setDebugMsg("Page loaded");
+  }, []);
 
   const handleSearch = useCallback(
     (query?: string, mood?: string) => {
+      console.log("[handleSearch] called:", { query, mood });
       search({ q: query || searchInput || undefined, mood });
     },
     [search, searchInput]
@@ -39,6 +46,7 @@ export default function HomePage() {
 
   const handleMoodClick = useCallback(
     (mood: string) => {
+      console.log("[handleMoodClick]", mood);
       const newMood = activeMood === mood ? undefined : mood;
       setActiveMood(newMood);
       handleSearch(undefined, newMood);
@@ -48,6 +56,7 @@ export default function HomePage() {
 
   const handleDishClick = useCallback(
     (dishName: string) => {
+      console.log("[handleDishClick]", dishName);
       setSearchInput(dishName);
       search({ q: dishName });
     },
@@ -56,11 +65,29 @@ export default function HomePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[handleSubmit]");
     handleSearch();
+  };
+
+  const testClick = () => {
+    console.log("TEST CLICK WORKS");
+    setDebugMsg("Click works! " + new Date().toLocaleTimeString());
+    alert("Click works!");
   };
 
   return (
     <div className="mx-auto max-w-md px-5 py-6 relative min-h-screen">
+      {/* Debug indicator */}
+      {debugMsg && (
+        <div
+          className="mb-3 rounded-lg bg-yellow-100 p-2 text-xs text-yellow-800 text-center"
+          onClick={testClick}
+          style={{ cursor: "pointer", touchAction: "manipulation" }}
+        >
+          Debug: {debugMsg} (tap me)
+        </div>
+      )}
+
       {/* Header */}
       <header className="mb-6">
         <div className="flex items-center justify-between">
@@ -101,7 +128,10 @@ export default function HomePage() {
               mood={mood.charAt(0).toUpperCase() + mood.slice(1)}
               emoji={emoji}
               active={activeMood === mood}
-              onClick={() => handleMoodClick(mood)}
+              onClick={() => {
+                console.log("[MoodChip onClick]", mood);
+                handleMoodClick(mood);
+              }}
             />
           ))}
         </div>
@@ -114,19 +144,17 @@ export default function HomePage() {
             <h2 className="text-base font-semibold">
               {loading ? "Searching..." : `${results.length} results`}
             </h2>
-            {hasSearched && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchInput("");
-                  setActiveMood(undefined);
-                  search({});
-                }}
-                className="text-xs text-accent touch-manipulation select-none"
-              >
-                Clear
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput("");
+                setActiveMood(undefined);
+                search({});
+              }}
+              className="text-xs text-accent touch-manipulation select-none"
+            >
+              Clear
+            </button>
           </div>
 
           {loading && (
@@ -186,7 +214,10 @@ export default function HomePage() {
                   emoji={dish.emoji}
                   nameEn={dish.nameEn}
                   nameNative={dish.nameNative}
-                  onClick={() => handleDishClick(dish.nameEn)}
+                  onClick={() => {
+                    console.log("[DishCard onClick]", dish.nameEn);
+                    handleDishClick(dish.nameEn);
+                  }}
                 />
               ))}
             </div>
@@ -195,7 +226,7 @@ export default function HomePage() {
           <div className="rounded-2xl border border-border bg-card p-5">
             <div className="mb-3 text-sm font-medium">✨ New to London?</div>
             <p className="text-sm text-muted leading-relaxed">
-              Start with a dish you miss, or tell us how you are feeling. 
+              Start with a dish you miss, or tell us how you are feeling.
               We will show you where other Hong Kongers go.
             </p>
           </div>

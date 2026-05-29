@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { TouchButton } from "./TouchButton";
 
 interface SearchResultCardProps {
   dish: {
@@ -47,20 +48,7 @@ export function SearchResultCard({
   const isGrocery = place.type === "grocery";
 
   return (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('[SearchResultCard] clicked:', place.name);
-        onClick?.();
-      }}
-      className={cn(
-        "w-full rounded-2xl border border-border bg-card p-4 text-left",
-        "transition-colors hover:border-accent touch-manipulation select-none",
-        "active:scale-[0.98]"
-      )}
-    >
+    <TouchButton variant="result" onPress={onClick || (() => {})}>
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex items-center gap-2 min-w-0">
           {dish.emoji && <span className="text-2xl shrink-0">{dish.emoji}</span>}
@@ -99,6 +87,6 @@ export function SearchResultCard({
           Buy ingredients here
         </div>
       )}
-    </button>
+    </TouchButton>
   );
 }
