@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Taste of Home
 
-## Getting Started
+A community app for immigrants to find authentic food from home. Search by dish, mood, and location. Read stories from people who share your cravings.
 
-First, run the development server:
+## What We're Building
+
+Not another restaurant finder. A place where:
+- You search **by dish** ("char siu") not cuisine ("Chinese")
+- **Mood matters** — "homesick," "celebrating," "need comfort"
+- **Cultural insiders** rate authenticity, not tourists
+- **Stories** connect dishes to memories, not just menus
+- **Groceries AND restaurants** — because sometimes you need to cook it yourself
+
+## MVP Scope
+
+- **Cuisine:** Hong Kong → UK
+- **City:** London (expandable)
+- **Dishes:** Char siu, wonton noodles, HK milk tea, egg tart, HK-style french toast
+- **Features:** Dish search, place profiles, authenticity scoring, story submissions
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 15 (App Router) |
+| Language | TypeScript (strict mode) |
+| Styling | Tailwind CSS v4 + shadcn/ui |
+| Database | Supabase (PostgreSQL + PostGIS + pgvector) |
+| Auth | Supabase Auth |
+| Hosting | Vercel |
+| Search | Algolia |
+| Analytics | PostHog |
+
+## Quick Start
 
 ```bash
+# Clone and install
+git clone https://github.com/sonnel-pun/taste-of-home.git
+cd taste-of-home
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Add your Supabase URL and anon key
+
+# Run dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                 # Next.js App Router
+├── components/          # Reusable UI components
+├── features/            # Domain-driven modules
+│   ├── search/          # Dish search
+│   ├── places/          # Restaurant & grocery profiles
+│   └── stories/         # Community stories
+├── hooks/               # Custom React hooks
+├── lib/                 # Utilities & API clients
+└── types/               # TypeScript type definitions
+```
 
-## Learn More
+## Contributing
 
-To learn more about Next.js, take a look at the following resources:
+See [WORKFLOW.md](WORKFLOW.md) for our development process.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
