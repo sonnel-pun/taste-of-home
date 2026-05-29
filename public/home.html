@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taste of Home</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:#FEFCF8;color:#1A1A1A;padding:20px;max-width:500px;margin:0 auto}
+h1{font-size:20px;margin-bottom:20px}
+.search{display:flex;gap:8px;border:1px solid #EEEAE4;border-radius:16px;padding:12px 16px;background:#fff;margin-bottom:20px}
+.search input{flex:1;border:none;outline:none;font-size:16px;background:transparent}
+.moods{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.mood{padding:8px 14px;border:1px solid #EEEAE4;border-radius:100px;background:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mood.active{border-color:#E8734A;background:#FFF0EB;color:#E8734A}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.card{border:1px solid #EEEAE4;border-radius:16px;padding:16px;background:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.card .e{font-size:28px}
+.card .n{font-size:14px;font-weight:600;margin-top:4px}
+.card .t{font-size:12px;color:#8A8A8A}
+.results{margin-top:20px}
+.result{border:1px solid #EEEAE4;border-radius:16px;padding:16px;background:#fff;margin-bottom:12px}
+.result .dish{font-size:14px;font-weight:600}
+.result .place{font-size:12px;color:#8A8A8A;margin-top:4px}
+.loading{text-align:center;padding:40px;color:#8A8A8A}
+.empty{text-align:center;padding:40px;color:#8A8A8A}
+.clear{color:#E8734A;cursor:pointer;font-size:14px;margin-bottom:12px;display:inline-block}
+</style>
+</head>
+<body>
+<h1>Taste of Home</h1>
+<div class="search"><span>🔍</span><input id="q" placeholder="Search..." autocomplete="off"></div>
+<div class="moods" id="moods"></div>
+<div id="default">
+<h2>Popular Dishes</h2>
+<div class="grid" id="dishes"></div>
+</div>
+<div id="results" style="display:none">
+<div class="clear" id="clear">← Clear</div>
+<div id="status"></div>
+</div>
+<script>
+var activeMood=null;
+var moods=[{m:"homesick",e:"🏠"},{m:"celebrating",e:"🎉"},{m:"comfort",e:"🤒"},{m:"nostalgic",e:"🕰️"},{m:"excited",e:"🆕"}];
+var dishes=[{e:"🍖",n:"Char Siu",t:"叉燒"},{e:"🍜",n:"Wonton Noodles",t:"鮮蝦雲吞麵"},{e:"🧋",n:"HK Milk Tea",t:"港式奶茶"},{e:"🍞",n:"HK French Toast",t:"西多士"},{e:"🥧",n:"Egg Tart",t:"蛋撻"},{e:"🍡",n:"Curry Fishballs",t:"咖哩魚蛋"},{e:"🥯",n:"Pineapple Bun",t:"菠蘿包"},{e:"🥓",n:"Siu Yuk",t:"燒肉"}];
+function renderMoods(){
+  var el=document.getElementById("moods");el.innerHTML="";
+  moods.forEach(function(x){
+    var chip=document.createElement("div");chip.className="mood"+(activeMood===x.m?" active":"");chip.textContent=x.e+" "+x.m;
+    chip.addEventListener("click",function(){activeMood=activeMood===x.m?null:x.m;renderMoods();doSearch();});
+    el.appendChild(chip);
+  });
+}
+function renderDishes(){
+  var el=document.getElementById("dishes");el.innerHTML="";
+  dishes.forEach(function(x){
+    var c=document.createElement("div");c.className="card";c.innerHTML='<div class="e">'+x.e+'</div><div class="n">'+x.n+'</div>'+(x.t?'<div class="t">'+x.t+'</div>':'');
+    c.addEventListener("click",function(){document.getElementById("q").value=x.n;doSearch(x.n);});
+    el.appendChild(c);
+  });
+}
+function showDefault(){document.getElementById("default").style.display="block";document.getElementById("results").style.display="none";}
+function showResults(){document.getElementById("default").style.display="none";document.getElementById("results").style.display="block";}
+async function doSearch(query){
+  var q=query||document.getElementById("q").value.trim();
+  if(!q&&!activeMood){showDefault();return;}
+  showResults();
+  var status=document.getElementById("status");status.innerHTML='<div class="loading">🍜 Loading...</div>';
+  var params=new URLSearchParams();if(q)params.set("q",q);if(activeMood)params.set("mood",activeMood);
+  try{
+    var res=await fetch("/api/dishes/search?"+params.toString());
+    var data=await res.json();
+    var results=data.data||[];
+    if(results.length===0){status.innerHTML='<div class="empty">No results found</div>';return;}
+    var html="";
+    results.forEach(function(r){
+      html+='<div class="result"><div class="dish">'+(r.dish.emoji||"")+" "+r.dish.nameEn+(r.dish.nameNative?" ("+r.dish.nameNative+")":"")+'</div>';
+      html+='<div class="place">📍 '+r.place.name+" · "+r.place.address+" · "+(r.place.type==="grocery"?"Grocery":"Restaurant")+'</div>';
+      if(r.authenticityScore)html+='<div class="place">Authenticity: '+r.authenticityScore+'%</div>';
+      html+='</div>';
+    });
+    status.innerHTML=html;
+  }catch(err){status.innerHTML='<div class="empty">Error: '+err.message+'</div>';}
+}
+document.getElementById("q").addEventListener("keypress",function(e){if(e.key==="Enter")doSearch();});
+document.getElementById("clear").addEventListener("click",function(){document.getElementById("q").value="";activeMood=null;renderMoods();showDefault();});
+renderMoods();renderDishes();
+</script>
+</body>
+</html>
