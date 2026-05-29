@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { TouchEventProvider } from "@/components/TouchEventProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,7 +23,6 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Taste of Home",
   description: "Find authentic food from home. Search by dish, mood, and location.",
-  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -36,7 +36,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        {children}
+        <TouchEventProvider>
+          {children}
+        </TouchEventProvider>
       </body>
     </html>
   );
