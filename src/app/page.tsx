@@ -1,65 +1,213 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useCallback } from "react";
+import { MoodChip } from "@/components/ui/MoodChip";
+import { DishCard } from "@/components/ui/DishCard";
+import { SearchResultCard } from "@/components/ui/SearchResultCard";
+import { useSearch } from "@/hooks/useSearch";
+
+const MOODS = [
+  { mood: "homesick", emoji: "🏠" },
+  { mood: "celebrating", emoji: "🎉" },
+  { mood: "comfort", emoji: "🤒" },
+  { mood: "nostalgic", emoji: "🕰️" },
+  { mood: "excited", emoji: "🆕" },
+];
+
+const POPULAR_DISHES = [
+  { emoji: "🍖", nameEn: "Char Siu", nameNative: "叉燒" },
+  { emoji: "🍜", nameEn: "Wonton Noodles", nameNative: "鮮蝦雲吞麵" },
+  { emoji: "🧋", nameEn: "HK Milk Tea", nameNative: "港式奶茶" },
+  { emoji: "🍞", nameEn: "HK French Toast", nameNative: "西多士" },
+  { emoji: "🥧", nameEn: "Egg Tart", nameNative: "蛋撻" },
+  { emoji: "🍡", nameEn: "Curry Fishballs", nameNative: "咖哩魚蛋" },
+  { emoji: "🥯", nameEn: "Pineapple Bun", nameNative: "菠蘿包" },
+  { emoji: "🥓", nameEn: "Siu Yuk", nameNative: "燒肉" },
+];
+
+export default function HomePage() {
+  const { results, loading, error, hasSearched, search } = useSearch();
+  const [searchInput, setSearchInput] = useState("");
+  const [activeMood, setActiveMood] = useState<string | undefined>(undefined);
+
+  const handleSearch = useCallback(
+    (query?: string, mood?: string) => {
+      search({ q: query || searchInput || undefined, mood });
+    },
+    [search, searchInput]
+  );
+
+  const handleMoodClick = useCallback(
+    (mood: string) => {
+      const newMood = activeMood === mood ? undefined : mood;
+      setActiveMood(newMood);
+      handleSearch(undefined, newMood);
+    },
+    [activeMood, handleSearch]
+  );
+
+  const handleDishClick = useCallback(
+    (dishName: string) => {
+      setSearchInput(dishName);
+      search({ q: dishName });
+    },
+    [search]
+  );
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSearch();
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="mx-auto max-w-md px-5 py-6">
+      {/* Header */}
+      <header className="mb-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold tracking-tight">
+            Taste
+            <span className="text-accent">of</span>
+            Home
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-sm">
+            👋
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+      </header>
+
+      {/* Search */}
+      <form onSubmit={handleSubmit} className="mb-5">
+        <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3.5">
+          <span className="text-muted">🔍</span>
+          <input
+            type="text"
+            placeholder="Craving something specific?"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="flex-1 bg-transparent text-base outline-none placeholder:text-muted"
+          />
+        </div>
+      </form>
+
+      {/* Moods */}
+      <div className="mb-6">
+        <div className="mb-2.5 text-xs font-medium uppercase tracking-wider text-muted">
+          How are you feeling?
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {MOODS.map(({ mood, emoji }) => (
+            <MoodChip
+              key={mood}
+              mood={mood.charAt(0).toUpperCase() + mood.slice(1)}
+              emoji={emoji}
+              active={activeMood === mood}
+              onClick={() => handleMoodClick(mood)}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          ))}
         </div>
-      </main>
+      </div>
+
+      {/* Content Area */}
+      {hasSearched ? (
+        <div>
+          {/* Search Results */}
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-semibold">
+              {loading ? "Searching..." : `${results.length} results`}
+            </h2>
+            {hasSearched && (
+              <button
+                onClick={() => {
+                  setSearchInput("");
+                  setActiveMood(undefined);
+                  search({});
+                }}
+                className="text-xs text-accent"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {loading && (
+            <div className="py-12 text-center text-muted">
+              <div className="mb-2 text-2xl">🍜</div>
+              Finding your taste of home...
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-2xl border border-border bg-card p-6 text-center">
+              <div className="mb-2 text-2xl">😕</div>
+              <div className="text-sm text-muted">{error}</div>
+            </div>
+          )}
+
+          {!loading && !error && results.length === 0 && (
+            <div className="rounded-2xl border border-border bg-card p-6 text-center">
+              <div className="mb-2 text-2xl">🔍</div>
+              <div className="text-sm font-medium">No results yet</div>
+              <div className="mt-1 text-xs text-muted">
+                Try searching for a dish, or pick a mood to explore
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {results.map((result) => (
+              <SearchResultCard
+                key={result.id}
+                dish={{
+                  nameEn: result.dish.nameEn,
+                  emoji: result.dish.emoji,
+                  nameNative: result.dish.nameNative,
+                }}
+                place={{
+                  name: result.place.name,
+                  type: result.place.type,
+                  address: result.place.address,
+                  city: result.place.city,
+                }}
+                authenticityScore={result.authenticityScore}
+                priceRange={result.priceRange}
+                verifiedByCount={result.verifiedByCount}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Popular Dishes Grid */}
+          <div className="mb-6">
+            <h2 className="mb-3 text-base font-semibold">Popular among HK immigrants</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {POPULAR_DISHES.map((dish) => (
+                <DishCard
+                  key={dish.nameEn}
+                  emoji={dish.emoji}
+                  nameEn={dish.nameEn}
+                  nameNative={dish.nameNative}
+                  onClick={() => handleDishClick(dish.nameEn)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Empty State / Onboarding */}
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="mb-3 text-sm font-medium">✨ New to London?</div>
+            <p className="text-sm text-muted leading-relaxed">
+              Start with a dish you miss, or tell us how you are feeling. 
+              We will show you where other Hong Kongers go.
+            </p>
+          </div>
+        </>
+      )}
+
+      {/* Footer */}
+      <footer className="mt-8 pb-6 text-center text-xs text-muted">
+        Taste of Home · Built with 💛 for immigrants everywhere
+      </footer>
     </div>
   );
 }
