@@ -2,8 +2,6 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { MoodChip } from "@/components/ui/MoodChip";
-import { DishCard } from "@/components/ui/DishCard";
 import { SearchResultCard } from "@/components/ui/SearchResultCard";
 import { useSearch } from "@/hooks/useSearch";
 
@@ -26,59 +24,61 @@ const POPULAR_DISHES = [
   { emoji: "🥓", nameEn: "Siu Yuk", nameNative: "燒肉" },
 ];
 
+// Force browser navigation (bypass Next.js router)
+function goTo(url: string) {
+  window.location.href = url;
+}
+
 function HomeContent() {
   const searchParams = useSearchParams();
   const { results, loading, error, hasSearched, search } = useSearch();
   const [searchInput, setSearchInput] = useState("");
-  const [initialLoad, setInitialLoad] = useState(true);
 
-  // Handle URL params on load
   useEffect(() => {
-    if (!initialLoad) return;
-    setInitialLoad(false);
-    
     const q = searchParams.get("q");
     const mood = searchParams.get("mood");
-    
     if (q || mood) {
       search({ q: q || undefined, mood: mood || undefined });
       if (q) setSearchInput(q);
     }
-  }, [searchParams, search, initialLoad]);
+  }, [searchParams, search]);
 
-  const activeMood = searchParams.get("mood") || undefined;
+  const activeMood = searchParams.get("mood") || "";
 
   return (
-    <div className="mx-auto max-w-md px-5 py-6 relative min-h-screen">
+    <div className="mx-auto max-w-md px-5 py-6 min-h-screen">
       <header className="mb-6">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">
-            Taste
-            <span className="text-accent">of</span>
-            Home
+            Taste<span className="text-accent">of</span>Home
           </h1>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-sm select-none">
-            👋
-          </div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-sm select-none">👋</div>
         </div>
       </header>
 
-      {/* Search form - native HTML GET */}
-      <form action="/" method="GET" className="mb-5">
+      {/* Search */}
+      <form 
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (searchInput.trim()) {
+            goTo(`/?q=${encodeURIComponent(searchInput.trim())}`);
+          }
+        }}
+        className="mb-5"
+      >
         <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3.5">
           <span className="text-muted select-none">🔍</span>
           <input
             type="text"
-            name="q"
             placeholder="Craving something specific?"
-            defaultValue={searchInput}
+            value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="flex-1 bg-transparent text-base outline-none placeholder:text-muted"
           />
         </div>
       </form>
 
-      {/* Moods - native links */}
+      {/* Moods */}
       <div className="mb-6">
         <div className="mb-2.5 text-xs font-medium uppercase tracking-wider text-muted select-none">
           How are you feeling?
@@ -86,41 +86,43 @@ function HomeContent() {
         <div className="flex flex-wrap gap-2">
           {MOODS.map(({ mood, emoji }) => {
             const isActive = activeMood === mood;
-            const href = isActive ? "/" : `/?mood=${mood}`;
             return (
-              <a
+              <div
                 key={mood}
-                href={href}
+                onClick={() => {
+                  console.log('[Mood] navigating to:', mood);
+                  goTo(isActive ? "/" : `/?mood=${mood}`);
+                }}
                 className={
-                  "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm transition-all " +
+                  "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm transition-all cursor-pointer select-none " +
                   (isActive
                     ? "border-accent bg-accent-soft text-accent font-medium"
                     : "border-border bg-card text-foreground hover:border-accent hover:bg-accent-soft")
                 }
-                style={{ cursor: "pointer", WebkitTapHighlightColor: "transparent", touchAction: "manipulation", textDecoration: "none", WebkitUserSelect: "none", userSelect: "none" }}
+                style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
               >
                 <span>{emoji}</span>
                 <span>{mood.charAt(0).toUpperCase() + mood.slice(1)}</span>
-              </a>
+              </div>
             );
           })}
         </div>
       </div>
 
-      {/* Content Area */}
+      {/* Content */}
       {hasSearched ? (
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold">
               {loading ? "Searching..." : `${results.length} results`}
             </h2>
-            <a
-              href="/"
-              className="text-xs text-accent"
-              style={{ cursor: "pointer", textDecoration: "none" }}
+            <div
+              onClick={() => goTo("/")}
+              className="text-xs text-accent cursor-pointer select-none"
+              style={{ touchAction: "manipulation" }}
             >
               Clear
-            </a>
+            </div>
           </div>
 
           {loading && (
@@ -141,9 +143,7 @@ function HomeContent() {
             <div className="rounded-2xl border border-border bg-card p-6 text-center">
               <div className="mb-2 text-2xl select-none">🔍</div>
               <div className="text-sm font-medium">No results yet</div>
-              <div className="mt-1 text-xs text-muted">
-                Try searching for a dish, or pick a mood to explore
-              </div>
+              <div className="mt-1 text-xs text-muted">Try searching for a dish, or pick a mood to explore</div>
             </div>
           )}
 
@@ -175,18 +175,21 @@ function HomeContent() {
             <h2 className="mb-3 text-base font-semibold">Popular among HK immigrants</h2>
             <div className="grid grid-cols-2 gap-3">
               {POPULAR_DISHES.map((dish) => (
-                <a
+                <div
                   key={dish.nameEn}
-                  href={`/?q=${encodeURIComponent(dish.nameEn)}`}
-                  className="flex flex-col items-start gap-1 rounded-2xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-accent text-left"
-                  style={{ cursor: "pointer", WebkitTapHighlightColor: "transparent", touchAction: "manipulation", textDecoration: "none", WebkitUserSelect: "none", userSelect: "none" }}
+                  onClick={() => {
+                    console.log('[Dish] navigating to:', dish.nameEn);
+                    goTo(`/?q=${encodeURIComponent(dish.nameEn)}`);
+                  }}
+                  className="flex flex-col items-start gap-1 rounded-2xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-accent cursor-pointer select-none text-left"
+                  style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
                 >
                   <span className="text-3xl">{dish.emoji}</span>
                   <span className="font-semibold text-sm leading-tight">{dish.nameEn}</span>
                   {dish.nameNative && (
                     <span className="text-xs text-muted">{dish.nameNative}</span>
                   )}
-                </a>
+                </div>
               ))}
             </div>
           </div>
