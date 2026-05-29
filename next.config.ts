@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Using webpack instead of turbopack for React 18 compatibility
 };
 
 export default nextConfig;

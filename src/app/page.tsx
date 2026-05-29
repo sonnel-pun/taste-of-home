@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { MoodChip } from "@/components/ui/MoodChip";
 import { DishCard } from "@/components/ui/DishCard";
 import { SearchResultCard } from "@/components/ui/SearchResultCard";
@@ -25,70 +26,30 @@ const POPULAR_DISHES = [
   { emoji: "🥓", nameEn: "Siu Yuk", nameNative: "燒肉" },
 ];
 
-export default function HomePage() {
+function HomeContent() {
+  const searchParams = useSearchParams();
   const { results, loading, error, hasSearched, search } = useSearch();
   const [searchInput, setSearchInput] = useState("");
-  const [activeMood, setActiveMood] = useState<string | undefined>(undefined);
-  const [debugMsg, setDebugMsg] = useState("");
+  const [initialLoad, setInitialLoad] = useState(true);
 
+  // Handle URL params on load
   useEffect(() => {
-    console.log("[HomePage] mounted");
-    setDebugMsg("Page loaded");
-  }, []);
+    if (!initialLoad) return;
+    setInitialLoad(false);
+    
+    const q = searchParams.get("q");
+    const mood = searchParams.get("mood");
+    
+    if (q || mood) {
+      search({ q: q || undefined, mood: mood || undefined });
+      if (q) setSearchInput(q);
+    }
+  }, [searchParams, search, initialLoad]);
 
-  const handleSearch = useCallback(
-    (query?: string, mood?: string) => {
-      console.log("[handleSearch] called:", { query, mood });
-      search({ q: query || searchInput || undefined, mood });
-    },
-    [search, searchInput]
-  );
-
-  const handleMoodClick = useCallback(
-    (mood: string) => {
-      console.log("[handleMoodClick]", mood);
-      const newMood = activeMood === mood ? undefined : mood;
-      setActiveMood(newMood);
-      handleSearch(undefined, newMood);
-    },
-    [activeMood, handleSearch]
-  );
-
-  const handleDishClick = useCallback(
-    (dishName: string) => {
-      console.log("[handleDishClick]", dishName);
-      setSearchInput(dishName);
-      search({ q: dishName });
-    },
-    [search]
-  );
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("[handleSubmit]");
-    handleSearch();
-  };
-
-  const testClick = () => {
-    console.log("TEST CLICK WORKS");
-    setDebugMsg("Click works! " + new Date().toLocaleTimeString());
-    alert("Click works!");
-  };
+  const activeMood = searchParams.get("mood") || undefined;
 
   return (
     <div className="mx-auto max-w-md px-5 py-6 relative min-h-screen">
-      {/* Debug indicator */}
-      {debugMsg && (
-        <div
-          className="mb-3 rounded-lg bg-yellow-100 p-2 text-xs text-yellow-800 text-center"
-          onClick={testClick}
-          style={{ cursor: "pointer", touchAction: "manipulation" }}
-        >
-          Debug: {debugMsg} (tap me)
-        </div>
-      )}
-
-      {/* Header */}
       <header className="mb-6">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">
@@ -102,38 +63,47 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Search */}
-      <form onSubmit={handleSubmit} className="mb-5">
+      {/* Search form - native HTML GET */}
+      <form action="/" method="GET" className="mb-5">
         <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3.5">
           <span className="text-muted select-none">🔍</span>
           <input
             type="text"
+            name="q"
             placeholder="Craving something specific?"
-            value={searchInput}
+            defaultValue={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="flex-1 bg-transparent text-base outline-none placeholder:text-muted"
           />
         </div>
       </form>
 
-      {/* Moods */}
+      {/* Moods - native links */}
       <div className="mb-6">
         <div className="mb-2.5 text-xs font-medium uppercase tracking-wider text-muted select-none">
           How are you feeling?
         </div>
         <div className="flex flex-wrap gap-2">
-          {MOODS.map(({ mood, emoji }) => (
-            <MoodChip
-              key={mood}
-              mood={mood.charAt(0).toUpperCase() + mood.slice(1)}
-              emoji={emoji}
-              active={activeMood === mood}
-              onClick={() => {
-                console.log("[MoodChip onClick]", mood);
-                handleMoodClick(mood);
-              }}
-            />
-          ))}
+          {MOODS.map(({ mood, emoji }) => {
+            const isActive = activeMood === mood;
+            const href = isActive ? "/" : `/?mood=${mood}`;
+            return (
+              <a
+                key={mood}
+                href={href}
+                className={
+                  "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm transition-all " +
+                  (isActive
+                    ? "border-accent bg-accent-soft text-accent font-medium"
+                    : "border-border bg-card text-foreground hover:border-accent hover:bg-accent-soft")
+                }
+                style={{ cursor: "pointer", WebkitTapHighlightColor: "transparent", touchAction: "manipulation", textDecoration: "none", WebkitUserSelect: "none", userSelect: "none" }}
+              >
+                <span>{emoji}</span>
+                <span>{mood.charAt(0).toUpperCase() + mood.slice(1)}</span>
+              </a>
+            );
+          })}
         </div>
       </div>
 
@@ -144,17 +114,13 @@ export default function HomePage() {
             <h2 className="text-base font-semibold">
               {loading ? "Searching..." : `${results.length} results`}
             </h2>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchInput("");
-                setActiveMood(undefined);
-                search({});
-              }}
-              className="text-xs text-accent touch-manipulation select-none"
+            <a
+              href="/"
+              className="text-xs text-accent"
+              style={{ cursor: "pointer", textDecoration: "none" }}
             >
               Clear
-            </button>
+            </a>
           </div>
 
           {loading && (
@@ -209,16 +175,18 @@ export default function HomePage() {
             <h2 className="mb-3 text-base font-semibold">Popular among HK immigrants</h2>
             <div className="grid grid-cols-2 gap-3">
               {POPULAR_DISHES.map((dish) => (
-                <DishCard
+                <a
                   key={dish.nameEn}
-                  emoji={dish.emoji}
-                  nameEn={dish.nameEn}
-                  nameNative={dish.nameNative}
-                  onClick={() => {
-                    console.log("[DishCard onClick]", dish.nameEn);
-                    handleDishClick(dish.nameEn);
-                  }}
-                />
+                  href={`/?q=${encodeURIComponent(dish.nameEn)}`}
+                  className="flex flex-col items-start gap-1 rounded-2xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-accent text-left"
+                  style={{ cursor: "pointer", WebkitTapHighlightColor: "transparent", touchAction: "manipulation", textDecoration: "none", WebkitUserSelect: "none", userSelect: "none" }}
+                >
+                  <span className="text-3xl">{dish.emoji}</span>
+                  <span className="font-semibold text-sm leading-tight">{dish.nameEn}</span>
+                  {dish.nameNative && (
+                    <span className="text-xs text-muted">{dish.nameNative}</span>
+                  )}
+                </a>
               ))}
             </div>
           </div>
@@ -237,5 +205,13 @@ export default function HomePage() {
         Taste of Home · Built with 💛 for immigrants everywhere
       </footer>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }
